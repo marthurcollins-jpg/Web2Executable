@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arthur's Galactic Command</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    background: radial-gradient(circle at center, #000428, #000000);
+    color: #e0f7ff;
+    font-family: 'Orbitron', 'Arial', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  /* Galaxy Map Container */
+  .galaxy-container {
+    display: flex;
+    gap: 20px;
+    height: 85vh;
+    position: relative;
+  }
+  
+  /* Star Systems Grid */
+  .galaxy-map {
+    flex: 3;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    gap: 10px;
+    padding: 15px;
+    background: rgba(5, 15, 40, 0.6);
+    border-radius: 15px;
+    border: 2px solid rgba(0, 150, 255, 0.3);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .galaxy-map::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cmFkaWFsR3JhZGllbnQgaWQ9ImciPjxzdG9wIG9mZnNldD0iMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiMwMDBhMjAiIC8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMDAwMDAwIiAvPjwvcmFkaWFsR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSJ1cmwoI2cpIiBvcGFjaXR5PSIwLjEiLz48L3N2Zz4=');
+    z-index: -1;
+  }
+  
+  /* Star System Nodes */
+  .star-system {
+    background: rgba(0, 20, 40, 0.7);
+    border: 2px solid rgba(0, 150, 255, 0.4);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .star-system:hover {
+    border-color: #00e0ff;
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(0, 224, 255, 0.3);
+  }
+  
+  .star-system.active {
+    border-color: #00ff88;
+    box-shadow: 0 0 25px rgba(0, 255, 136, 0.4);
+  }
+  
+  .star-system.enemy {
+    border-color: #ff5555;
+    box-shadow: 0 0 15px rgba(255, 85, 85, 0.3);
+  }
+  
+  .star-system.neutral {
+    border-color: #aaaaaa;
+  }
+  
+  /* Star Icon */
+  .star-icon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 5px;
+    position: relative;
+  }
+  
+  .star {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, #ffdd00, #ffaa00);
+    border-radius: 50%;
+    box-shadow: 0 0 20px #ffaa00;
+  }
+  
+  .star.blue {
+    background: radial-gradient(circle at center, #00aaff, #0066ff);
+    box-shadow: 0 0 20px #0066ff;
+  }
+  
+  .star.red {
+    background: radial-gradient(circle at center, #ff5555, #ff0000);
+    box-shadow: 0 0 20px #ff0000;
+  }
+  
+  /* Planet Rings */
+  .rings {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    top: -20px;
+    left: -20px;
+  }
+  
+  /* System Info */
+  .system-info {
+    text-align: center;
+    font-size: 11px;
+    z-index: 2;
+  }
+  
+  .system-name {
+    font-weight: bold;
+    margin-bottom: 2px;
+    font-size: 12px;
+  }
+  
+  .system-status {
+    font-size: 9px;
+    opacity: 0.8;
+  }
+  
+  /* Control Panel */
+  .control-panel {
+    flex: 1;
+    background: rgba(5, 15, 40, 0.8);
+    border-radius: 15px;
+    border: 2px solid rgba(0, 150, 255, 0.3);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+  }
+  
+  .panel-section {
+    background: rgba(0, 20, 40, 0.5);
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid rgba(0, 150, 255, 0.2);
+  }
+  
+  .section-title {
+    color: #00a8ff;
+    font-size: 16px;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid rgba(0, 168, 255, 0.3);
+  }
+  
+  /* Resources Display */
+  .resources {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  
+  .resource-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background: rgba(0, 30, 60, 0.6);
+    border-radius: 6px;
+  }
+  
+  .resource-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+  }
+  
+  .energy { background: #ffaa00; }
+  .credits { background: #00aa00; }
+  .minerals { background: #aa5500; }
+  .research { background: #aa00aa; }
+  
+  .resource-amount {
+    font-family: monospace;
+    font-size: 14px;
+    font-weight: bold;
+  }
+  
+  /* Fleet Management */
+  .fleet-units {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .unit-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    background: rgba(0, 30, 60, 0.4);
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  
+  .unit-item:hover {
+    background: rgba(0, 40, 80, 0.6);
+  }
+  
+  .unit-count {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  /* Building Queue */
+  .queue-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    background: rgba(0, 40, 80, 0.4);
+    border-radius: 6px;
+    margin-bottom: 8px;
+  }
+  
+  /* Actions Panel */
+  .actions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  
+  .action-btn {
+    padding: 12px;
+    background: linear-gradient(135deg, #00a8ff, #0066ff);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    transition: all 0.3s;
+    text-align: center;
+  }
+  
+  .action-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 102, 255, 0.4);
+  }
+  
+  .action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .action-btn.danger {
+    background: linear-gradient(135deg, #ff5555, #cc0000);
+  }
+  
+  .action-btn.success {
+    background: linear-gradient(135deg, #00ff88, #00aa55);
+  }
+  
+  /* Events Log */
+  .events-log {
+    flex: 1;
+    background: rgba(5, 15, 40, 0.8);
+    border-radius: 15px;
+    border: 2px solid rgba(0, 150, 255, 0.3);
+    padding: 15px;
+    margin-top: 20px;
+    overflow-y: auto;
+    max-height: 300px;
+  }
+  
+  .event {
+    padding: 8px;
+    margin-bottom: 8px;
+    background: rgba(0, 30, 60, 0.4);
+    border-radius: 6px;
+    border-left: 4px solid #00a8ff;
+    font-size: 12px;
+  }
+  
+  .event.warning {
+    border-left-color: #ffaa00;
+  }
+  
+  .event.danger {
+    border-left-color: #ff5555;
+  }
+  
+  .event.success {
+    border-left-color: #00ff88;
+  }
+  
+  /* Game Header */
+  .game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    margin-bottom: 20px;
+    border-bottom: 2px solid rgba(0, 150, 255, 0.3);
+  }
+  
+  .game-title {
+    font-size: 28px;
+    background: linear-gradient(90deg, #00e0ff, #00a8ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 10px rgba(0, 224, 255, 0.3);
+  }
+  
+  .game-time {
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    color: #00ff88;
+  }
+  
+  /* Research Tree Modal */
+  .research-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 800px;
+    height: 600px;
+    background: rgba(5, 15, 40, 0.95);
+    border: 3px solid rgba(0, 150, 255, 0.5);
+    border-radius: 15px;
+    padding: 20px;
+    z-index: 100;
+    display: none;
+  }
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .close-modal {
+    background: #ff5555;
+    border: none;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  
+  /* Connection Lines */
+  .connection {
+    position: absolute;
+    background: rgba(0, 200, 255, 0.3);
+    z-index: 0;
+  }
+  
+  /* Victory/Loss Screen */
+  .game-over-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    display: none;
+  }
+  
+  .victory-box {
+    background: linear-gradient(135deg, #001122, #003344);
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    border: 3px solid #00ff88;
+    box-shadow: 0 0 50px rgba(0, 255, 136, 0.3);
+    max-width: 500px;
+  }
+  
+  .defeat-box {
+    background: linear-gradient(135deg, #220000, #440000);
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    border: 3px solid #ff5555;
+    box-shadow: 0 0 50px rgba(255, 85, 85, 0.3);
+    max-width: 500px;
+  }
+  
+  .star-dust {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  .star-particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: white;
+    border-radius: 50%;
+  }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+  <!-- Game Header -->
+  <div class="game-header">
+    <h1 class="game-title">ARTHUR'S GALACTIC COMMAND</h1>
+    <div class="game-time">STARDATE: <span id="stardate">0001.01</span></div>
+  </div>
+  
+  <!-- Main Game Area -->
+  <div class="galaxy-container">
+    <!-- Star Map -->
+    <div class="galaxy-map" id="galaxyMap">
+      <!-- Star systems will be generated here -->
+    </div>
+    
+    <!-- Control Panel -->
+    <div class="control-panel">
+      <!-- Selected System Info -->
+      <div class="panel-section">
+        <h3 class="section-title" id="selectedSystemName">SYSTEM: NONE</h3>
+        <div id="systemInfo">
+          <p>Select a star system to view details</p>
+        </div>
+      </div>
+      
+      <!-- Resources -->
+      <div class="panel-section">
+        <h3 class="section-title">EMPIRE RESOURCES</h3>
+        <div class="resources">
+          <div class="resource-item">
+            <div class="resource-icon energy">⚡</div>
+            <div>ENERGY</div>
+            <div class="resource-amount" id="energy">1000</div>
+          </div>
+          <div class="resource-item">
+            <div class="resource-icon credits">$</div>
+            <div>CREDITS</div>
+            <div class="resource-amount" id="credits">5000</div>
+          </div>
+          <div class="resource-item">
+            <div class="resource-icon minerals">⛏️</div>
+            <div>MINERALS</div>
+            <div class="resource-amount" id="minerals">2500</div>
+          </div>
+          <div class="resource-item">
+            <div class="resource-icon research">🔬</div>
+            <div>RESEARCH</div>
+            <div class="resource-amount" id="research">100</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Fleet Management -->
+      <div class="panel-section">
+        <h3 class="section-title">FLEET COMMAND</h3>
+        <div class="fleet-units" id="fleetUnits">
+          <!-- Fleet units will be added here -->
+        </div>
+      </div>
+      
+      <!-- Building Queue -->
+      <div class="panel-section">
+        <h3 class="section-title">CONSTRUCTION QUEUE</h3>
+        <div id="buildingQueue">
+          <p>No construction in progress</p>
+        </div>
+      </div>
+      
+      <!-- Actions -->
+      <div class="panel-section">
+        <h3 class="section-title">SYSTEM ACTIONS</h3>
+        <div class="actions-grid" id="systemActions">
+          <!-- Action buttons will be added here -->
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Events Log -->
+  <div class="events-log">
+    <h3 class="section-title">EVENTS LOG</h3>
+    <div id="eventsList">
+      <div class="event success">Welcome to Galactic Command, Commander Arthur!</div>
+    </div>
+  </div>
+</div>
+
+<!-- Research Modal -->
+<div class="research-modal" id="researchModal">
+  <div class="modal-header">
+    <h2 class="section-title">RESEARCH TREE</h2>
+    <button class="close-modal" onclick="closeResearch()">✕</button>
+  </div>
+  <div id="researchTree">
+    <!-- Research tree will be generated here -->
+  </div>
+</div>
+
+<!-- Victory Screen -->
+<div class="game-over-screen" id="victoryScreen">
+  <div class="victory-box">
+    <h2 style="color: #00ff88; font-size: 36px; margin-bottom: 20px;">VICTORY ACHIEVED!</h2>
+    <p style="font-size: 18px; margin-bottom: 20px;">The galaxy is now under Arthur's peaceful command</p>
+    <div style="margin: 30px 0;">
+      <div style="font-size: 24px; color: #00ff88;">Final Score: <span id="finalScore">0</span></div>
+      <div style="margin-top: 10px;">Systems Controlled: <span id="systemsControlled">0</span></div>
+      <div>Turns Taken: <span id="turnsTaken">0</span></div>
+    </div>
+    <button class="action-btn success" style="padding: 15px 40px; font-size: 16px;" onclick="resetGame()">NEW GAME</button>
+  </div>
+</div>
+
+<!-- Defeat Screen -->
+<div class="game-over-screen" id="defeatScreen">
+  <div class="defeat-box">
+    <h2 style="color: #ff5555; font-size: 36px; margin-bottom: 20px;">GALACTIC DEFEAT</h2>
+    <p style="font-size: 18px; margin-bottom: 20px;">Your empire has fallen to the enemy forces</p>
+    <div style="margin: 30px 0;">
+      <div style="font-size: 24px; color: #ff5555;">Final Score: <span id="defeatScore">0</span></div>
+      <div style="margin-top: 10px;">Turns Survived: <span id="turnsSurvived">0</span></div>
+      <div>Enemies Defeated: <span id="enemiesDefeated">0</span></div>
+    </div>
+    <button class="action-btn" style="padding: 15px 40px; font-size: 16px;" onclick="resetGame()">TRY AGAIN</button>
+  </div>
+</div>
+
+<script>
+// ==================== GAME STATE ====================
+let gameState = {
+  stardate: 1.01,
+  selectedSystem: null,
+  playerSystems: [],
+  enemySystems: [],
+  neutralSystems: [],
+  
+  resources: {
+    energy: 1000,
+    credits: 5000,
+    minerals: 2500,
+    research: 100
+  },
+  
+  fleet: {
+    fighters: 10,
+    frigates: 5,
+    destroyers: 2,
+    carriers: 1,
+    battleships: 0
+  },
+  
+  buildings: {
+    starbase: 0,
+    shipyard: 0,
+    researchLab: 0,
+    miningStation: 0,
+    defenseGrid: 0
+  },
+  
+  research: {
+    weapons: 0,
+    shields: 0,
+    propulsion: 0,
+    industry: 0,
+    ai: 0
+  },
+  
+  constructionQueue: [],
+  events: [],
+  turn: 1,
+  score: 0,
+  gameOver: false
+};
+
+// Star Systems Data
+const starSystems = [
+  { id: 1, name: "Sol Prime", type: "player", x: 1, y: 3, resources: { energy: 200, minerals: 100 }, defense: 50, fleet: 20 },
+  { id: 2, name: "Proxima", type: "neutral", x: 2, y: 1, resources: { energy: 150, minerals: 80 }, defense: 20, fleet: 5 },
+  { id: 3, name: "Alpha Centauri", type: "enemy", x: 2, y: 5, resources: { energy: 180, minerals: 120 }, defense: 60, fleet: 30 },
+  { id: 4, name: "Vega", type: "neutral", x: 3, y: 2, resources: { energy: 100, minerals: 200 }, defense: 30, fleet: 10 },
+  { id: 5, name: "Sirius", type: "neutral", x: 3, y: 4, resources: { energy: 220, minerals: 90 }, defense: 25, fleet: 8 },
+  { id: 6, name: "Betelgeuse", type: "enemy", x: 4, y: 1, resources: { energy: 300, minerals: 150 }, defense: 70, fleet: 40 },
+  { id: 7, name: "Orion", type: "neutral", x: 4, y: 3, resources: { energy: 120, minerals: 180 }, defense: 35, fleet: 12 },
+  { id: 8, name: "Andromeda", type: "neutral", x: 5, y: 2, resources: { energy: 180, minerals: 140 }, defense: 40, fleet: 15 },
+  { id: 9, name: "Pleiades", type: "player", x: 5, y: 4, resources: { energy: 160, minerals: 110 }, defense: 45, fleet: 18 },
+  { id: 10, name: "Cygnus", type: "enemy", x: 6, y: 3, resources: { energy: 250, minerals: 200 }, defense: 80, fleet: 50 }
+];
+
+// Research Tree
+const researchTree = {
+  weapons: [
+    { level: 1, name: "Laser Tech", cost: 50, effect: "Weapon damage +20%" },
+    { level: 2, name: "Plasma Cannons", cost: 100, effect: "Weapon damage +40%" },
+    { level: 3, name: "Quantum Torpedoes", cost: 200, effect: "Weapon damage +70%" },
+    { level: 4, name: "Gamma Ray Burst", cost: 400, effect: "Weapon damage +120%" }
+  ],
+  shields: [
+    { level: 1, name: "Deflector Shields", cost: 50, effect: "Shield strength +20%" },
+    { level: 2, name: "Phase Shields", cost: 100, effect: "Shield strength +40%" },
+    { level: 3, name: "Quantum Shielding", cost: 200, effect: "Shield strength +70%" },
+    { level: 4, name: "Temporal Barrier", cost: 400, effect: "Shield strength +120%" }
+  ],
+  propulsion: [
+    { level: 1, name: "Warp Drive", cost: 50, effect: "Fleet speed +20%" },
+    { level: 2, name: "Hyperdrive", cost: 100, effect: "Fleet speed +40%" },
+    { level: 3, name: "Quantum Slipstream", cost: 200, effect: "Fleet speed +70%" },
+    { level: 4, name: "Transwarp", cost: 400, effect: "Fleet speed +120%" }
+  ],
+  industry: [
+    { level: 1, name: "Automated Mining", cost: 50, effect: "Resource production +20%" },
+    { level: 2, name: "Nano-Assemblers", cost: 100, effect: "Resource production +40%" },
+    { level: 3, name: "Matter Replicators", cost: 200, effect: "Resource production +70%" },
+    { level: 4, name: "Dyson Swarm", cost: 400, effect: "Resource production +120%" }
+  ]
+};
+
+// ==================== INITIALIZE GAME ====================
+function initGame() {
+  createGalaxyMap();
+  updateUI();
+  startGameLoop();
+}
+
+// ==================== GALAXY MAP ====================
+function createGalaxyMap() {
+  const galaxyMap = document.getElementById('galaxyMap');
+  galaxyMap.innerHTML = '';
+  
+  // Create star dust background
+  createStarDust();
+  
+  // Create connections between systems
+  createConnections();
+  
+  // Create star systems
+  starSystems.forEach(system => {
+    const systemDiv = document.createElement('div');
+    systemDiv.className = `star-system ${system.type}`;
+    systemDiv.style.gridColumn = system.x;
+    systemDiv.style.gridRow = system.y;
+    systemDiv.dataset.id = system.id;
+    
+    systemDiv.innerHTML = `
+      <div class="star-icon">
+        <div class="star ${system.type === 'player' ? 'blue' : system.type === 'enemy' ? 'red' : ''}"></div>
+        ${system.type === 'player' ? '<div class="rings"></div>' : ''}
+      </div>
+      <div class="system-info">
+        <div class="system-name">${system.name}</div>
+        <div class="system-status">${system.type.toUpperCase()}</div>
+      </div>
+    `;
+    
+    systemDiv.onclick = () => selectSystem(system.id);
+    galaxyMap.appendChild(systemDiv);
+  });
+}
+
+function createStarDust() {
+  const galaxyMap = document.getElementById('galaxyMap');
+  const starDust = document.createElement('div');
+  starDust.className = 'star-dust';
+  
+  for(let i = 0; i < 50; i++) {
+    const star = document.createElement('div');
+    star.className = 'star-particle';
+    star.style.left = `${Math.random() * 100}%`;
+    star.style.top = `${Math.random() * 100}%`;
+    star.style.animationDelay = `${Math.random() * 5}s`;
+    star.style.opacity = Math.random() * 0.5 + 0.2;
+    starDust.appendChild(star);
+  }
+  
+  galaxyMap.appendChild(starDust);
+}
+
+function createConnections() {
+  // This would draw lines between connected systems
+  // Simplified for this example
+}
+
+// ==================== GAME LOGIC ====================
+function selectSystem(systemId) {
+  const system = starSystems.find(s => s.id === systemId);
+  if (!system) return;
+  
+  gameState.selectedSystem = system;
+  
+  // Update selected system UI
+  document.querySelectorAll('.star-system').forEach(el => {
+    el.classList.remove('active');
+  });
+  document.querySelector(`.star-system[data-id="${systemId}"]`).classList.add('active');
+  
+  // Update system info
+  updateSystemInfo();
+}
+
+function updateSystemInfo() {
+  const system = gameState.selectedSystem;
+  if (!system) return;
+  
+  const systemName = document.getElementById('selectedSystemName');
+  const systemInfo = document.getElementById('systemInfo');
+  const actionsGrid = document.getElementById('systemActions');
+  
+  systemName.textContent = `SYSTEM: ${system.name}`;
+  
+  systemInfo.innerHTML = `
+    <div style="margin-bottom: 10px;">
+      <strong>Status:</strong> ${system.type.toUpperCase()}
+    </div>
+    <div style="margin-bottom: 10px;">
+      <strong>Resources:</strong><br>
+      ⚡ Energy: ${system.resources.energy}<br>
+      ⛏️ Minerals: ${system.resources.minerals}
+    </div>
+    <div style="margin-bottom: 10px;">
+      <strong>Defense:</strong> ${system.defense}%
+    </div>
+    <div>
+      <strong>Fleet Strength:</strong> ${system.fleet} units
+    </div>
+  `;
+  
+  // Update actions based on system type
+  actionsGrid.innerHTML = '';
+  
+  if (system.type === 'player') {
+    actionsGrid.innerHTML = `
+      <button class="action-btn" onclick="buildStarbase()">Build Starbase</button>
+      <button class="action-btn" onclick="buildShipyard()">Build Shipyard</button>
+      <button class="action-btn" onclick="upgradeDefenses()">Upgrade Defenses</button>
+      <button class="action-btn" onclick="moveFleet()">Move Fleet</button>
+    `;
+  } else if (system.type === 'neutral') {
+    actionsGrid.innerHTML = `
+      <button class="action-btn success" onclick="colonizeSystem()">Colonize (5000💰)</button>
+      <button class="action-btn" onclick="sendDiplomats()">Send Diplomats</button>
+    `;
+  } else if (system.type === 'enemy') {
+    actionsGrid.innerHTML = `
+      <button class="action-btn danger" onclick="attackSystem()">Attack System</button>
+      <button class="action-btn" onclick="sendSpies()">Send Spies (1000💰)</button>
+      <button class="action-btn" onclick="blockadeSystem()">Blockade</button>
+    `;
+  }
+}
+
+// ==================== ACTIONS ====================
+function colonizeSystem() {
+  const system = gameState.selectedSystem;
+  if (!system || system.type !== 'neutral') return;
+  
+  if (gameState.resources.credits >= 5000) {
+    gameState.resources.credits -= 5000;
+    system.type = 'player';
+    addEvent(`Colonized ${system.name}!`, 'success');
+    updateUI();
+    createGalaxyMap();
+    selectSystem(system.id);
+  } else {
+    addEvent('Not enough credits to colonize!', 'danger');
+  }
+}
+
+function attackSystem() {
+  const system = gameState.selectedSystem;
+  if (!system || system.type !== 'enemy') return;
+  
+  // Calculate battle outcome
+  const playerStrength = gameState.fleet.fighters * 1 + 
+                        gameState.fleet.frigates * 3 + 
+                        gameState.fleet.destroyers * 5;
+  const enemyStrength = system.fleet;
+  
+  const playerChance = playerStrength / (playerStrength + enemyStrength);
+  const playerRoll = Math.random();
+  
+  if (playerRoll < playerChance) {
+    // Player wins
+    system.type = 'player';
+    const spoils = Math.floor(system.resources.energy * 0.5 + system.resources.minerals * 0.5);
+    gameState.resources.energy += system.resources.energy;
+    gameState.resources.minerals += system.resources.minerals;
+    gameState.score += 1000;
+    
+    addEvent(`Victory! Conquered ${system.name} and gained ${spoils} resources!`, 'success');
+  } else {
+    // Player loses
+    const losses = Math.floor(Math.random() * 5) + 1;
+    gameState.fleet.fighters = Math.max(0, gameState.fleet.fighters - losses);
+    gameState.score -= 500;
+    
+    addEvent(`Defeat at ${system.name}! Lost ${losses} fighter units.`, 'danger');
+  }
+  
+  updateUI();
+  createGalaxyMap();
+}
+
+function buildStarbase() {
+  const cost = 2000;
+  if (gameState.resources.credits >= cost && gameState.resources.minerals >= 1000) {
+    gameState.resources.credits -= cost;
+    gameState.resources.minerals -= 1000;
+    gameState.buildings.starbase++;
+    addEvent('Starbase construction started!', 'success');
+    updateUI();
+  } else {
+    addEvent('Not enough resources for starbase!', 'warning');
+  }
+}
+
+function buildShipyard() {
+  const cost = 3000;
+  if (gameState.resources.credits >= cost && gameState.resources.minerals >= 1500) {
+    gameState.resources.credits -= cost;
+    gameState.resources.minerals -= 1500;
+    gameState.buildings.shipyard++;
+    addEvent('Shipyard construction started!', 'success');
+    updateUI();
+  } else {
+    addEvent('Not enough resources for shipyard!', 'warning');
+  }
+}
+
+function moveFleet() {
+  addEvent('Fleet movement initiated. Select destination system.', 'warning');
+}
+
+function sendDiplomats() {
+  const cost = 1000;
+  if (gameState.resources.credits >= cost) {
+    gameState.resources.credits -= cost;
+    const chance = Math.random();
+    if (chance > 0.7) {
+      gameState.selectedSystem.type = 'player';
+      addEvent('Diplomatic mission successful! System joined our empire.', 'success');
+    } else {
+      addEvent('Diplomatic mission failed. System remains neutral.', 'warning');
+    }
+    updateUI();
+    createGalaxyMap();
+  } else {
+    addEvent('Not enough credits for diplomatic mission!', 'danger');
+  }
+}
+
+function sendSpies() {
+  const cost = 1000;
+  if (gameState.resources.credits >= cost) {
+    gameState.resources.credits -= cost;
+    const info = `Enemy system intelligence: ${gameState.selectedSystem.fleet} ships, ${gameState.selectedSystem.defense}% defense`;
+    addEvent(`Spy mission successful! ${info}`, 'success');
+  } else {
+    addEvent('Not enough credits for spy mission!', 'danger');
+  }
+}
+
+function blockadeSystem() {
+  addEvent('Blockade established around enemy system.', 'warning');
+}
+
+function upgradeDefenses() {
+  const cost = 500;
+  if (gameState.resources.credits >= cost) {
+    gameState.resources.credits -= cost;
+    gameState.selectedSystem.defense = Math.min(100, gameState.selectedSystem.defense + 10);
+    addEvent(`Defenses upgraded to ${gameState.selectedSystem.defense}%`, 'success');
+    updateUI();
+  } else {
+    addEvent('Not enough credits to upgrade defenses!', 'danger');
+  }
+}
+
+// ==================== RESEARCH ====================
+function openResearch() {
+  document.getElementById('researchModal').style.display = 'block';
+  populateResearchTree();
+}
+
+function closeResearch() {
+  document.getElementById('researchModal').style.display = 'none';
+}
+
+function populateResearchTree() {
+  const treeContainer = document.getElementById('researchTree');
+  treeContainer.innerHTML = '';
+  
+  for (const field in researchTree) {
+    const fieldDiv = document.createElement('div');
+    fieldDiv.className = 'panel-section';
+    fieldDiv.innerHTML = `<h4 style="color: #00a8ff; margin-bottom: 10px;">${field.toUpperCase()}</h4>`;
+    
+    researchTree[field].forEach(tech => {
+      const currentLevel = gameState.research[field];
+      const canResearch = currentLevel === tech.level - 1 && gameState.resources.research >= tech.cost;
+      
+      const techDiv = document.createElement('div');
+      techDiv.className = 'unit-item';
+      techDiv.innerHTML = `
+        <div>
+          <strong>${tech.name}</strong><br>
+          <small>${tech.effect}</small>
+        </div>
+        <div>
+          ${currentLevel >= tech.level ? 
+            '<span style="color: #00ff88">✓ Completed</span>' : 
+            canResearch ? 
+              `<button class="action-btn" onclick="research('${field}', ${tech.level})" style="padding: 5px 10px; font-size: 11px;">Research (${tech.cost} RP)</button>` :
+              `<span style="color: #aaa">${tech.cost} RP</span>`
+          }
+        </div>
+      `;
+      fieldDiv.appendChild(techDiv);
+    });
+    
+    treeContainer.appendChild(fieldDiv);
+  }
+}
+
+function research(field, level) {
+  const tech = researchTree[field].find(t => t.level === level);
+  if (!tech) return;
+  
+  if (gameState.resources.research >= tech.cost) {
+    gameState.resources.research -= tech.cost;
+    gameState.research[field] = level;
+    addEvent(`Researched: ${tech.name}`, 'success');
+    updateUI();
+    populateResearchTree();
+  }
+}
+
+// ==================== FLEET MANAGEMENT ====================
+function buildFighter() {
+  const cost = 100;
+  if (gameState.resources.minerals >= cost) {
+    gameState.resources.minerals -= cost;
+    gameState.fleet.fighters++;
+    addEvent('Fighter unit constructed.', 'success');
+    updateUI();
+  }
+}
+
+function buildFrigate() {
+  const cost = 300;
+  if (gameState.resources.minerals >= cost) {
+    gameState.resources.minerals -= cost;
+    gameState.fleet.frigates++;
+    addEvent('Frigate unit constructed.', 'success');
+    updateUI();
+  }
+}
+
+function buildDestroyer() {
+  const cost = 600;
+  if (gameState.resources.minerals >= cost) {
+    gameState.resources.minerals -= cost;
+    gameState.fleet.destroyers++;
+    addEvent('Destroyer unit constructed.', 'success');
+    updateUI();
+  }
+}
+
+// ==================== UI UPDATES ====================
+function updateUI() {
+  // Update resources
+  document.getElementById('energy').textContent = gameState.resources.energy;
+  document.getElementById('credits').textContent = gameState.resources.credits;
+  document.getElementById('minerals').textContent = gameState.resources.minerals;
+  document.getElementById('research').textContent = gameState.resources.research;
+  
+  // Update stardate
+  document.getElementById('stardate').textContent = gameState.stardate.toFixed(2);
+  
+  // Update fleet display
+  const fleetUnits = document.getElementById('fleetUnits');
+  fleetUnits.innerHTML = `
+    <div class="unit-item">
+      <div>Fighters</div>
+      <div class="unit-count">
+        <span>${gameState.fleet.fighters}</span>
+        <button class="action-btn" onclick="buildFighter()" style="padding: 5px 10px; font-size: 11px;">+</button>
+      </div>
+    </div>
+    <div class="unit-item">
+      <div>Frigates</div>
+      <div class="unit-count">
+        <span>${gameState.fleet.frigates}</span>
+        <button class="action-btn" onclick="buildFrigate()" style="padding: 5px 10px; font-size: 11px;">+</button>
+      </div>
+    </div>
+    <div class="unit-item">
+      <div>Destroyers</div>
+      <div class="unit-count">
+        <span>${gameState.fleet.destroyers}</span>
+        <button class="action-btn" onclick="buildDestroyer()" style="padding: 5px 10px; font-size: 11px;">+</button>
+      </div>
+    </div>
+    <div class="unit-item">
+      <div>Carriers</div>
+      <div class="unit-count">
+        <span>${gameState.fleet.carriers}</span>
+        <button class="action-btn" onclick="buildCarrier()" style="padding: 5px 10px; font-size: 11px;">+</button>
+      </div>
+    </div>
+    <div class="unit-item">
+      <div>Battleships</div>
+      <div class="unit-count">
+        <span>${gameState.fleet.battleships}</span>
+        <button class="action-btn" onclick="buildBattleship()" style="padding: 5px 10px; font-size: 11px;">+</button>
+      </div>
+    </div>
+  `;
+  
+  // Update selected system info if any
+  if (gameState.selectedSystem) {
+    updateSystemInfo();
+  }
+  
+  // Check victory/defeat conditions
+  checkGameState();
+}
+
+function addEvent(message, type = '') {
+  const eventsList = document.getElementById('eventsList');
+  const eventDiv = document.createElement('div');
+  eventDiv.className = `event ${type}`;
+  eventDiv.textContent = `[Turn ${gameState.turn}] ${message}`;
+  
+  eventsList.insertBefore(eventDiv, eventsList.firstChild);
+  
+  // Keep only last 10 events
+  while (eventsList.children.length > 10) {
+    eventsList.removeChild(eventsList.lastChild);
+  }
+}
+
+// ==================== GAME LOOP ====================
+function startGameLoop() {
+  setInterval(() => {
+    if (gameState.gameOver) return;
+    
+    // Increment turn
+    gameState.turn++;
+    gameState.stardate += 0.01;
+    
+    // Generate resources
+    const playerSystems = starSystems.filter(s => s.type === 'player');
+    gameState.resources.energy += playerSystems.length * 50;
+    gameState.resources.minerals += playerSystems.length * 25;
+    gameState.resources.research += Math.floor(playerSystems.length * 2);
+    
+    // Random events
+    if (Math.random() > 0.7) {
+      const events = [
+        'Solar flare detected. Energy production increased temporarily.',
+        'Asteroid mining operation successful.',
+        'Trade negotiations complete. Credits received.',
+        'Research breakthrough!',
+        'Pirate activity reported in neutral systems.'
+      ];
+      addEvent(events[Math.floor(Math.random() * events.length)], 'warning');
+    }
+    
+    // Enemy actions
+    if (Math.random() > 0.8) {
+      const enemySystems = starSystems.filter(s => s.type === 'enemy');
+      if (enemySystems.length > 0) {
+        const enemy = enemySystems[Math.floor(Math.random() * enemySystems.length)];
+        const playerSystems = starSystems.filter(s => s.type === 'player');
+        if (playerSystems.length > 0) {
+          const target = playerSystems[Math.floor(Math.random() * playerSystems.length)];
+          addEvent(`Enemy forces from ${enemy.name} are attacking ${target.name}!`, 'danger');
+          
+          // Simulate attack
+          if (Math.random() > 0.6) {
+            target.defense = Math.max(0, target.defense - 20);
+            addEvent(`${target.name} defenses damaged!`, 'danger');
+          }
+        }
+      }
+    }
+    
+    updateUI();
+  }, 30000); // 30 seconds per turn
+}
+
+function checkGameState() {
+  const playerSystems = starSystems.filter(s => s.type === 'player').length;
+  const enemySystems = starSystems.filter(s => s.type === 'enemy').length;
+  
+  // Victory condition
+  if (enemySystems === 0) {
+    showVictoryScreen();
+    return;
+  }
+  
+  // Defeat condition
+  if (playerSystems === 0 || gameState.fleet.fighters + gameState.fleet.frigates + gameState.fleet.destroyers === 0) {
+    showDefeatScreen();
+    return;
+  }
+}
+
+function showVictoryScreen() {
+  gameState.gameOver = true;
+  document.getElementById('finalScore').textContent = gameState.score + (gameState.turn * 100);
+  document.getElementById('systemsControlled').textContent = starSystems.filter(s => s.type === 'player').length;
+  document.getElementById('turnsTaken').textContent = gameState.turn;
+  document.getElementById('victoryScreen').style.display = 'flex';
+}
+
+function showDefeatScreen() {
+  gameState.gameOver = true;
+  document.getElementById('defeatScore').textContent = gameState.score;
+  document.getElementById('turnsSurvived').textContent = gameState.turn;
+  document.getElementById('enemiesDefeated').textContent = starSystems.filter(s => s.type === 'enemy').length;
+  document.getElementById('defeatScreen').style.display = 'flex';
+}
+
+function resetGame() {
+  // Reset game state
+  gameState = {
+    stardate: 1.01,
+    selectedSystem: null,
+    resources: {
+      energy: 1000,
+      credits: 5000,
+      minerals: 2500,
+      research: 100
+    },
+    fleet: {
+      fighters: 10,
+      frigates: 5,
+      destroyers: 2,
+      carriers: 1,
+      battleships: 0
+    },
+    buildings: {
+      starbase: 0,
+      shipyard: 0,
+      researchLab: 0,
+      miningStation: 0,
+      defenseGrid: 0
+    },
+    research: {
+      weapons: 0,
+      shields: 0,
+      propulsion: 0,
+      industry: 0,
+      ai: 0
+    },
+    constructionQueue: [],
+    events: [],
+    turn: 1,
+    score: 0,
+    gameOver: false
+  };
+  
+  // Reset star systems
+  starSystems.forEach(system => {
+    if (system.id === 1) system.type = 'player';
+    else if (system.id === 3 || system.id === 6 || system.id === 10) system.type = 'enemy';
+    else system.type = 'neutral';
+  });
+  
+  // Reset UI
+  document.getElementById('victoryScreen').style.display = 'none';
+  document.getElementById('defeatScreen').style.display = 'none';
+  document.getElementById('researchModal').style.display = 'none';
+  
+  // Reinitialize game
+  initGame();
+}
+
+// ==================== INITIALIZE ====================
+window.onload = initGame;
+
+// Add keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'r' || e.key === 'R') {
+    openResearch();
+  }
+  if (e.key === 'n' || e.key === 'N') {
+    // Next turn
+    gameState.turn++;
+    gameState.stardate += 0.01;
+    updateUI();
+  }
+  if (e.key === 'Escape') {
+    closeResearch();
+  }
+});
+</script>
+</body>
+</html>
